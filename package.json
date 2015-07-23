@@ -1,0 +1,23 @@
+{
+  "name": "fleet-test-api",
+  "version": "1.0.0",
+  "description": "Fleet Management Test API",
+  "main": "app.js",
+  "devDependencies": {
+    "express": "^4.13.1",
+    "jade": "^1.11.0",
+    "mysql": "^2.8.0"
+  },
+  "dependencies": {},
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://newmax_farrukh@bitbucket.org/newmax_farrukh/fleet-test-api.git"
+  },
+  "keywords": [
+    "fm"
+  ],
+  "author": "Farrukh Mamatkhalilov",
+  "license": "ISC",
+  "homepage": "https://texnoman.uz"
+}
