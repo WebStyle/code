@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var config = require('./config');
 var User = require('./app/models/user');
+var Fleet = require('./app/models/fleet');
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -17,24 +18,12 @@ app.set('superSecret', config.secret);
 app.use(morgan('dev'));
 
 var cors = require('express-cors');
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-  host     : '127.0.0.1',
-  user     : 'root',
-  password : '123',
-  database : 'fleet'
-});
-connection.connect();
 
 //adding static files from directory
 app.use(express.static('public'));
 // Views
 app.set('view engine', 'jade');
 app.set('views', './public');
-
-connection.query('INSERT INTO `contentVehicles` SET `content`="aaaaa"', function (error, results, fields) {
-    vehicle = results;
-});
 
 app.use(cors({
     allowedOrigins: [
@@ -47,19 +36,28 @@ app.use(cors({
     ]
 }));
 
-app.get('/setup', function(req, res) {
-    // create a sample user
-    var nick = new User({
-        name: 'Farrukh',
-        password: 'password',
-        admin: true
-    });
+app.post('/setup', function(req, res) {
+
+    // create a sample user and fleet
+    var nick = new User(req.body);
+    var newfleet = new Fleet({FleetName: req.body.FleetName});
 
     nick.save(function (err) {
         if (err) throw err;
         console.log('New user added');
-        res.json({ success: true });
     });
+
+    newfleet.save(function (err) {
+      if (err) throw err;
+      console.log('New fleet added');
+    });
+
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+
+
 });
 
 // API routes
@@ -94,25 +92,25 @@ apiRoutes.post('/auth', function(req, res) {
     }
   });
 });
-apiRoutes.use(function (req, res, next) {
-
-    var token = req.body.token;
-
-    if(token) {
-        jwt.verify(token, app.get('superSecret'), function (err, decoded) {
-            if (err) {
-                return res.json({success: false, message: 'failed to auth token'})
-            } else {
-               req.decoded = decoded;
-            }
-        });
-    } else {
-        return res.status(403).send({
-            success: false,
-            message: 'No token provided'
-        });
-    }
-});
+// apiRoutes.use(function (req, res, next) {
+//
+//     var token = req.body.token;
+//
+//     if(token) {
+//         jwt.verify(token, app.get('superSecret'), function (err, decoded) {
+//             if (err) {
+//                 return res.json({success: false, message: 'failed to auth token'})
+//             } else {
+//                req.decoded = decoded;
+//             }
+//         });
+//     } else {
+//         return res.status(403).send({
+//             success: false,
+//             message: 'No token provided'
+//         });
+//     }
+// });
 
 apiRoutes.get('/', function(req, res) {
     res.json({ message: 'Welcome to the API'});
@@ -121,6 +119,12 @@ apiRoutes.get('/', function(req, res) {
 apiRoutes.get('/users', function(req, res) {
     User.find({}, function(err, users) {
         res.json(users);
+    });
+});
+
+apiRoutes.get('/fleet', function(req, res) {
+    Fleet.find({}, function(err, fleets) {
+        res.json(fleets);
     });
 });
 
@@ -192,5 +196,3 @@ var server = app.listen(1337, function () {
   	var port = server.address().port;
   	console.log('Server ishga tushdi');
 });
-
-connection.end();
