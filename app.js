@@ -13,6 +13,7 @@ app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
+
 mongoose.connect(config.database);
 app.set('superSecret', config.secret);
 app.use(morgan('dev'));
@@ -59,6 +60,24 @@ app.post('/setup', function(req, res) {
 
 
 });
+
+app.post('/fleetAdd', function(req, res) {
+
+    // create a sample  fleet
+    var newfleet = new Fleet(req.body);
+
+    newfleet.save(function (err) {
+      if (err) throw err;
+      console.log('New fleet added');
+    });
+
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+
+});
+
 
 // API routes
 var apiRoutes = express.Router();
@@ -125,6 +144,18 @@ apiRoutes.get('/users', function(req, res) {
 apiRoutes.get('/fleet', function(req, res) {
     Fleet.find({}, function(err, fleets) {
         res.json(fleets);
+    });
+});
+
+apiRoutes.get('/api/fleet/edit/:fleetId', function(req, res, value) {
+    Fleet.findOne({
+        _id: value
+    }, function(err, fleet) {
+      var updateFleet = new Fleet(req.body);
+      updateFleet.save(function (err) {
+          if (err) throw err;
+          console.log('Fleet updated');
+      });
     });
 });
 
