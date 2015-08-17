@@ -10,6 +10,7 @@ var User = require('./app/models/user');
 var Fleet = require('./app/models/fleet');
 var Services = require('./app/models/services');
 var Issues = require('./app/models/issues');
+var Vendors = require('./app/models/vendors');
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -121,6 +122,19 @@ app.post('/issuesAdd', function(req, res) {
     res.json({ success: true, token: token });
 });
 
+app.post('/vendorsAdd', function(req, res) {
+    // create a sample services
+    var newVendors = new Vendors(req.body);
+    newVendors.save(function (err) {
+      if (err) throw err;
+      console.log('New vendors added');
+    });
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+});
+
 // API routes
 var apiRoutes = express.Router();
 
@@ -201,7 +215,13 @@ apiRoutes.get('/issues', function(req, res) {
     });
 });
 
-apiRoutes.get('/api/fleet/edit/:fleetId', function(req, res, value) {
+apiRoutes.get('/vendors', function(req, res) {
+    Issues.find({}, function(err, vendors) {
+        res.json(vendors);
+    });
+});
+
+apiRoutes.get('/fleet/edit/:fleetId', function(req, res, value) {
     Fleet.findOne({
         _id: value
     }, function(err, fleet) {
