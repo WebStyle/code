@@ -8,6 +8,8 @@ var jwt = require('jsonwebtoken');
 var config = require('./config');
 var User = require('./app/models/user');
 var Fleet = require('./app/models/fleet');
+var Services = require('./app/models/services');
+var Issues = require('./app/models/issues');
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -57,8 +59,23 @@ app.post('/setup', function(req, res) {
         expiresInMinutes: 1440
     });
     res.json({ success: true, token: token });
+});
 
+app.post('/fleetDelete/', function (req, res) {
+  Fleet.remove(function (err, product) {
+    if (err) return handleError(err);
+    Fleet.findById(req.body.id, function (err, product) {
+      console.log(product) // null
+    });
+  });
+});
 
+app.post('/userDelete/', function (req, res) {
+  User.remove( {"_id": req.body.id});
+});
+
+app.post('/upload', function(req, res) {
+  res.json(req.body);
 });
 
 app.post('/fleetAdd', function(req, res) {
@@ -78,6 +95,31 @@ app.post('/fleetAdd', function(req, res) {
 
 });
 
+app.post('/servicesAdd', function(req, res) {
+    // create a sample services
+    var newServices = new Services(req.body);
+    newServices.save(function (err) {
+      if (err) throw err;
+      console.log('New services added');
+    });
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+});
+
+app.post('/issuesAdd', function(req, res) {
+    // create a sample services
+    var newIssues = new Issues(req.body);
+    newIssues.save(function (err) {
+      if (err) throw err;
+      console.log('New issues added');
+    });
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+});
 
 // API routes
 var apiRoutes = express.Router();
@@ -144,6 +186,18 @@ apiRoutes.get('/users', function(req, res) {
 apiRoutes.get('/fleet', function(req, res) {
     Fleet.find({}, function(err, fleets) {
         res.json(fleets);
+    });
+});
+
+apiRoutes.get('/services', function(req, res) {
+    Services.find({}, function(err, services) {
+        res.json(services);
+    });
+});
+
+apiRoutes.get('/issues', function(req, res) {
+    Issues.find({}, function(err, issues) {
+        res.json(issues);
     });
 });
 
