@@ -11,6 +11,7 @@ var Fleet = require('./app/models/fleet');
 var Services = require('./app/models/services');
 var Issues = require('./app/models/issues');
 var Vendors = require('./app/models/vendors');
+var Reminders = require('./app/models/reminders');
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -32,7 +33,7 @@ app.set('views', './public');
 app.use(cors({
     allowedOrigins: [
         'localhost:3000',
-        '10.10.10.107:3000'
+        '10.10.10.145:3000'
     ],
     headers: [
       'Authorization',
@@ -109,6 +110,19 @@ app.post('/servicesAdd', function(req, res) {
     res.json({ success: true, token: token });
 });
 
+app.post('/remindersAdd', function(req, res) {
+    // create a sample services
+    var newServices = new Services(req.body);
+    newServices.save(function (err) {
+      if (err) throw err;
+      console.log('New reminders added');
+    });
+    var token = jwt.sign('', app.get('superSecret'), {
+        expiresInMinutes: 1440
+    });
+    res.json({ success: true, token: token });
+});
+
 app.post('/issuesAdd', function(req, res) {
     // create a sample services
     var newIssues = new Issues(req.body);
@@ -135,13 +149,15 @@ app.post('/vendorsAdd', function(req, res) {
     res.json({ success: true, token: token });
 });
 
+app.get('/lang?')
+
 // API routes
 var apiRoutes = express.Router();
 
 apiRoutes.post('/auth', function(req, res) {
   // find the user
   User.findOne({
-    name: req.body.name
+    name: req.body.username
   }, function(err, user) {
 
     if (err) throw err;
@@ -155,7 +171,7 @@ apiRoutes.post('/auth', function(req, res) {
       } else {
         // create a token
         var token = jwt.sign(user, app.get('superSecret'), {
-            expiresInMinutes: 1440
+            expiresInMinutes: 60*5
         });
 
         res.json({
@@ -216,7 +232,7 @@ apiRoutes.get('/issues', function(req, res) {
 });
 
 apiRoutes.get('/vendors', function(req, res) {
-    Issues.find({}, function(err, vendors) {
+    Vendors.find({}, function(err, vendors) {
         res.json(vendors);
     });
 });

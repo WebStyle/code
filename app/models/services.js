@@ -8,5 +8,6 @@ module.exports = mongoose.model('Services', new Schema({
   Vendor: String,
   Reference: String,
   Documents: String,
-  Comment: String
+  Comment: String,
+  CompletedServices: String
 }));
